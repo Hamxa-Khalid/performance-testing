@@ -1,0 +1,99 @@
+# =============================================================================
+# Artillery Load Test - JSONPlaceholder Public API
+# -----------------------------------------------------------------------------
+# Illustrative load profile against a reliable free public API.
+# Load levels are intentionally MODEST. Only load-test systems you own or have
+# explicit permission to test.
+#
+# Run:   npm run load      (or)   artillery run artillery/load-test.yml
+# Report: artillery run --output reports/load.json artillery/load-test.yml
+#         artillery report reports/load.json
+# =============================================================================
+config:
+  target: "https://jsonplaceholder.typicode.com"
+  # Named phases model a realistic load curve: warm-up -> ramp -> steady state.
+  phases:
+    - name: "Warm-up"
+      duration: 30
+      arrivalRate: 2
+    - name: "Ramp-up"
+      duration: 60
+      arrivalRate: 2
+      rampTo: 5
+    - name: "Sustained load"
+      duration: 60
+      arrivalRate: 5
+  defaults:
+    headers:
+      content-type: "application/json"
+      accept: "application/json"
+  # Optional plugins. Requires: npm i -D artillery-plugin-expect
+  # (also documented in the root README). Remove this block if you do not
+  # want plugin-backed assertions.
+  plugins:
+    expect: {}
+  # Global success criteria evaluated at the end of the run. The process exits
+  # non-zero if any threshold is breached, which makes this CI-friendly.
+  ensure:
+    thresholds:
+      - http.response_time.p95: 800
+      - http.response_time.p99: 1500
+    conditions:
+      - expression: "http.codes.200 > 0"
+      - expression: "http.request_rate >= 1"
+
+scenarios:
+  # ---------------------------------------------------------------------------
+  # Scenario 1: Posts API flow (weighted higher - the common read/write path)
+  # ---------------------------------------------------------------------------
+  - name: "Posts API flow"
+    weight: 7
+    flow:
+      - get:
+          url: "/posts"
+          expect:
+            - statusCode: 200
+            - contentType: json
+      - think: 1
+      - get:
+          url: "/posts/1"
+          capture:
+            - json: "$.id"
+              as: "postId"
+            - json: "$.userId"
+              as: "userId"
+          expect:
+            - statusCode: 200
+            - equals:
+                - "{{ postId }}"
+                - 1
+      - think: 2
+      - post:
+          url: "/posts"
+          json:
+            title: "Performance test post"
+            body: "Created during an Artillery load test run."
+            userId: "{{ userId }}"
+          capture:
+            - json: "$.id"
+              as: "createdId"
+          expect:
+            - statusCode: 201
+      - think: 1
+
+  # ---------------------------------------------------------------------------
+  # Scenario 2: Users API (lighter, read-only path)
+  # ---------------------------------------------------------------------------
+  - name: "Users API"
+    weight: 3
+    flow:
+      - get:
+          url: "/users"
+          expect:
+            - statusCode: 200
+            - contentType: json
+      - think: 1
+      - get:
+          url: "/users/1"
+          expect:
+            - statusCode: 200

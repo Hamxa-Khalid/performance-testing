@@ -1,0 +1,45 @@
+# =============================================================================
+# Artillery Smoke Test - JSONPlaceholder Public API
+# -----------------------------------------------------------------------------
+# Tiny, fast sanity check for CI: a handful of virtual users hitting the core
+# endpoints once. Confirms the API is reachable and the scenarios are valid
+# before any heavier load test is run.
+#
+# Run:  npm run smoke   (or)   artillery run artillery/smoke-test.yml
+# =============================================================================
+config:
+  target: "https://jsonplaceholder.typicode.com"
+  phases:
+    - name: "Smoke"
+      duration: 5
+      arrivalRate: 1
+  defaults:
+    headers:
+      content-type: "application/json"
+      accept: "application/json"
+  plugins:
+    expect: {}
+  ensure:
+    conditions:
+      - expression: "http.codes.200 > 0"
+
+scenarios:
+  - name: "Smoke - core endpoints"
+    flow:
+      - get:
+          url: "/posts/1"
+          expect:
+            - statusCode: 200
+            - contentType: json
+      - get:
+          url: "/users/1"
+          expect:
+            - statusCode: 200
+      - post:
+          url: "/posts"
+          json:
+            title: "smoke"
+            body: "smoke test"
+            userId: 1
+          expect:
+            - statusCode: 201

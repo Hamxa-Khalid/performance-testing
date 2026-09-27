@@ -1,0 +1,28 @@
+# Dependencies
+node_modules/
+
+# Environment / secrets
+.env
+.env.*
+!.env.example
+
+# Test output (raw results & generated reports)
+results/
+*.jtl
+*.log
+jmeter.log
+
+# Artillery generated reports
+reports/*.json
+reports/*.html
+reports/load-report.html
+
+# Keep the tracked report docs
+!reports/.gitkeep
+!reports/SAMPLE_RESULTS.md
+
+# OS / editor cruft
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/

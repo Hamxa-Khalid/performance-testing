@@ -1,0 +1,30 @@
+{
+  "name": "performance-testing",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Performance & load testing showcase using Apache JMeter and Artillery against the JSONPlaceholder public API.",
+  "author": "Muhammad Hamza Khalid <muhammadhamzaqae@gmail.com>",
+  "license": "MIT",
+  "keywords": [
+    "performance-testing",
+    "load-testing",
+    "artillery",
+    "jmeter",
+    "qa",
+    "sqa",
+    "api-testing"
+  ],
+  "scripts": {
+    "load": "artillery run artillery/load-test.yml",
+    "smoke": "artillery run artillery/smoke-test.yml",
+    "load:report": "artillery run --output reports/load.json artillery/load-test.yml",
+    "report": "artillery report reports/load.json --output reports/load-report.html"
+  },
+  "devDependencies": {
+    "artillery": "^2.0.0",
+    "artillery-plugin-expect": "^2.3.0"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
